@@ -1,0 +1,88 @@
+/*
+  Design direction: a darkened operations-room console.
+
+  History worth knowing before you "fix" this: this file used to hold a light
+  cream "paper + grease-pencil acetate" palette, on the theory that a draft
+  for review shouldn't look like authoritative system output. That reasoning
+  was overextended. The app's actual non-negotiables are
+  "never show a fabricated confidence number" and "never rebuild the workstation's
+  map" - neither of which is a statement about color. The paper theme simply
+  read as a text document and made a tactical planning tool look inert, so
+  it was replaced with the ops-room palette below.
+
+  The draft-not-decision framing is still enforced, just by the things that
+  actually carry it: the DRAFT stamp, the standing disclaimer, the qualitative
+  risk language, and the absence of any score/ranking/recommendation anywhere
+  in the UI. Those are what must not change.
+
+  Affiliation colors follow the usual MIL-STD reading - blue friendly, red
+  hostile, green neutral, amber unknown - and live in lib/affiliation.ts,
+  tuned for legibility on this dark ground.
+*/
+:root {
+  /* --- Brand palette (defaults). The semantic tokens below map onto these.
+     An organisation overrides them in frontend/brand.local/brand.css (see
+     src/brand/index.ts), never in global.css. --- */
+  --brand-ground: #081220; /* primary ground */
+  --brand-surface: #0b3d4a; /* surfaces */
+  --brand-accent: #00d0e1; /* primary accent */
+  --brand-interactive: #38b6ff; /* interactive */
+  --brand-accent-2: #f5b842; /* accent */
+  --brand-highlight: #b89f6b; /* highlights */
+  --brand-border: #64748b; /* borders */
+  --brand-text: #e6eff5; /* text */
+
+  /* --- ground / ink --- */
+  --paper: var(--brand-ground); /* page ground */
+  --paper-raised: color-mix(in srgb, var(--brand-surface) 40%, var(--brand-ground)); /* panel / card surface */
+  --paper-inset: var(--brand-ground); /* inputs, wells - recedes below the panel */
+  --ink: var(--brand-text); /* primary text */
+  --ink-soft: #8195a8; /* secondary text, labels - Steel is too dark for text on navy */
+  --grid-line: color-mix(in srgb, var(--brand-border) 40%, var(--brand-ground)); /* borders, hairlines, plot grid */
+
+  /* --- COA marker colors: one per COA, cycles through these.
+     Still "one sheet, one color" - just lit rather than pencilled. --- */
+  --acetate-1: var(--brand-accent); /* teal */
+  --acetate-2: var(--brand-accent-2); /* gold */
+  --acetate-3: #6fbf4f; /* green - no brand equivalent, kept */
+
+  --redteam: #e8595b; /* red-team annotations only */
+  --stamp: #e8894a; /* DRAFT stamp, warnings */
+  --stamp-ink: var(--brand-ground);
+
+  --focus-ring: var(--brand-interactive);
+
+  /* --- HUD accents: corner brackets, plot texture, glow.
+     --glow is used for the "lit console" halo on active/threat elements;
+     keep it low-alpha, it reads as backlight not neon. --- */
+  --hud-line: var(--brand-surface);
+  --texture-line: #092533; /* topographic contour lines on the page ground - surface 45% over ground; literal because global.css's body data-URI repeats it */
+  --glow: rgba(0, 208, 225, 0.4); /* --brand-accent at 40% */
+  --glow-threat: rgba(232, 89, 91, 0.45);
+
+  /* --- type. Inter for UI text, matching the companion geospatial apps
+     it runs beside: sentence case, mono
+     only where figures change or must line up (clock, IDs, counts,
+     coordinates). Display used to be a wide-tracked mono for the console
+     look; that made this app read as a different product from its companions.
+     Arabic has no Inter glyphs, so it falls through to IBM Plex Sans Arabic. --- */
+  --font-display: "Inter", "IBM Plex Sans Arabic", "Segoe UI", sans-serif;
+  --font-body: "Inter", "IBM Plex Sans Arabic", -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", "Courier New", monospace;
+
+  /* 4px small radius. Cards stay on it too rather than a larger
+     8px: .tac-frame draws its corner brackets as background layers,
+     and a larger radius clips the bracket corners off. */
+  --radius: 4px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 20px;
+  --space-5: 32px;
+  --space-6: 48px;
+}
+
+[dir="rtl"] {
+  --font-body: "IBM Plex Sans Arabic", "Inter", -apple-system, "Segoe UI", sans-serif;
+  --font-display: "IBM Plex Sans Arabic", "Inter", "Segoe UI", sans-serif;
+}

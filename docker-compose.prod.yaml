@@ -1,0 +1,51 @@
+# sandtable - production deployment
+#
+# Deployment folder:
+#   sandtable/
+#     docker-compose.prod.yaml
+#     DEPLOYMENT.md                    one-time setup on a new target (docs/DEPLOYMENT.md)
+#     .env.prod                        from .env.prod.example (secrets only: LLM_API_KEY)
+#     sandtable-<timestamp>.tar       image
+#     config/config.yaml               all settings (LLM endpoint and model under ai:)
+#     config/config.prod.yaml          every setting with its production value (allowed hosts, CORS)
+#
+# Build host:   .\scripts\dev.ps1 build          -> dist\sandtable-<timestamp>.tar
+#               copy docker-compose.prod.yaml, .env.prod.example, config/, docs/DEPLOYMENT.md and the .tar
+# New target:   follow docs/DEPLOYMENT.md once
+# Install:      docker load -i sandtable-<timestamp>.tar
+# Start:        docker compose -f docker-compose.prod.yaml --env-file .env.prod up -d
+# Check:        docker compose -f docker-compose.prod.yaml ps   (UI: http://<host>:8080)
+# Logs:         docker compose -f docker-compose.prod.yaml logs -f
+# Upgrade:      docker load the new tar, then the Start command again
+# Stop:         docker compose -f docker-compose.prod.yaml down
+#
+# One image, one container: nginx serves the built UI on port 80 and proxies
+# /api to uvicorn on 127.0.0.1:8000 inside the container. Only port 80 is
+# published. The only outbound connection the app makes is to LLM_BASE_URL.
+
+name: sandtable
+
+services:
+  app:
+    image: sandtable:1.0.0
+    container_name: sandtable
+    env_file:
+      - .env.prod                      # secrets only
+    environment:
+      APP_ENV: prod                    # applies config/config.prod.yaml over config.yaml
+    volumes:
+      # Read-only. Edit config/*.yaml and restart the container; no rebuild needed.
+      - ./config:/app/config:ro
+    ports:
+      # host:container - change the left number to move the app.
+      - "8080:80"
+    restart: unless-stopped
+    healthcheck:
+      # Goes through nginx, so it checks the real serving path. Static endpoint
+      # on purpose: /api/health/llm would restart-loop the container during an
+      # LLM outage.
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:80/api/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

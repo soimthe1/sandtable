@@ -1,0 +1,24 @@
+# INERT as of the single-image merge. The production build's context is the
+# REPO ROOT (docker build -f docker/Dockerfile .), and Docker only reads the
+# .dockerignore at the root of the context - so /.dockerignore is the file
+# that governs it now. This one still applies to the DEV compose file, which
+# builds ./backend on its own.
+#
+# Keep the build context small and host-side files out of the image.
+__pycache__
+*.py[cod]
+.venv
+venv
+.pytest_cache
+
+# Env files are never baked into the image. Dev config stays on the dev
+# machine; production config reaches the container at RUN time through the
+# config/ volume mount (see docker-compose.prod.yaml), so a real .env.prod
+# present during a build must not end up in an image layer.
+.env
+.env.*
+
+.git
+.gitignore
+Dockerfile
+.dockerignore

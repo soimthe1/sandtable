@@ -1,0 +1,24 @@
+{
+  "documentTitle": "Example — COA / Wargaming Assistant",
+  "i18n": {
+    "en": {
+      "app": {
+        "title": "Example",
+        "name_ar": "",
+        "name_en": "Example",
+        "subtitle": "COA / Wargaming Assistant"
+      },
+      "scenario": {
+        "import_button": "Import scenario.json from Example Workstation"
+      }
+    },
+    "ar": {
+      "app": {
+        "title": "Example",
+        "name_ar": "",
+        "name_en": "Example",
+        "subtitle": "مساعد إعداد مسارات العمل ومحاكاة الحرب"
+      }
+    }
+  }
+}

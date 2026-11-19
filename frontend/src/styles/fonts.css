@@ -1,0 +1,54 @@
+/*
+ * Self-hosted webfonts. Imported before global.css so the @font-face rules
+ * exist before anything asks for them.
+ *
+ * WHY these are bundled rather than pulled from Google Fonts:
+ * Sandtable is built to run on AIR-GAPPED networks. index.html used to <link> the
+ * Google Fonts stylesheet, which means the browser fetches fonts.googleapis.com
+ * and fonts.gstatic.com at page load. On a disconnected network that request
+ * hangs and then fails, and the whole UI silently drops to fallback system
+ * fonts - the app still "works", which is exactly what makes it easy to miss
+ * until someone notices the deployed build looks wrong. These packages put the
+ * .woff2 files in the bundle, so the page has no external dependency at all.
+ *
+ * Only the subsets and weights actually in use are imported. Pulling the
+ * package index (@fontsource/x/index.css) would drag in Cyrillic, Greek,
+ * Vietnamese and every weight from 100-700 in both styles - megabytes of
+ * .woff2 in an image that has to travel as a tar.
+ *
+ * In use (see tokens.css --font-body / --font-display / --font-data):
+ *   Inter                 latin  - body + headings, English UI
+ *   IBM Plex Sans         latin  - the product wordmark in the header lockup
+ *   IBM Plex Sans Arabic  arabic - body text when the UI is Arabic (RTL)
+ *   IBM Plex Mono         latin  - data: clock, IDs, counts, unit labels,
+ *                                  coordinates
+ *
+ * Weights: 400 and 600 are set explicitly in the stylesheets; 700 is here
+ * because headings and <strong> inherit the browser's bold default, and
+ * without a real 700 face the browser synthesises one by smearing the 400.
+ *
+ * Special Elite was in the old Google Fonts link and is deliberately NOT here:
+ * nothing references it. It was left over from the cream "paper" theme that
+ * the dark ops-room palette replaced.
+ */
+
+/* --- Inter (latin) - body + headings --- */
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
+
+/* --- IBM Plex Sans (latin) - wordmark --- */
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-sans/latin-700.css";
+
+/* --- IBM Plex Sans Arabic (arabic) - body in RTL --- */
+@import "@fontsource/ibm-plex-sans-arabic/arabic-400.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-600.css";
+@import "@fontsource/ibm-plex-sans-arabic/arabic-700.css";
+
+/* --- IBM Plex Mono (latin) - display + data --- */
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/ibm-plex-mono/latin-600.css";

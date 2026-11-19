@@ -1,0 +1,29 @@
+# INERT. The production build's context is the REPO ROOT
+# (docker build -f docker/Dockerfile .) and Docker only reads the
+# .dockerignore at the root of the context, so /.dockerignore governs the
+# frontend now too. Nothing builds ./frontend as its own context any more -
+# the dev compose file runs the Vite dev server from a plain node image.
+# Kept only so the exclusions aren't silently lost if that ever changes.
+#
+# Keep the build context small and, more importantly, keep host-side files
+# OUT of the image build.
+#
+# node_modules matters most: the frontend Dockerfile does `COPY . .` after
+# `npm install`, so without this line a Windows host's node_modules would be
+# copied over the container's freshly installed Linux one - native binaries
+# and all - and the build would use the wrong platform's packages.
+node_modules
+dist
+
+# Env files are never baked in. VITE_* values reach the image through
+# --build-arg (see docker-compose.prod.yaml / scripts/build-release.ps1);
+# a stray dev .env copied into the context could otherwise be picked up by
+# Vite at build time and silently override them.
+.env
+.env.*
+
+.git
+.gitignore
+Dockerfile
+.dockerignore
+tsconfig.tsbuildinfo

@@ -1,0 +1,45 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / Vite
+node_modules/
+*.local
+*.tsbuildinfo
+
+# Build output and images (.\scripts\dev.ps1 build writes dist\)
+dist/
+build/
+*.tar
+
+# Logs and local state
+logs/
+*.log
+.dev-pids
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Real env files and keys stay local; templates (*.example) are tracked
+.env
+.env.*
+*.env
+!*.example
+*.pem
+*.key
+*.pfx
+
+# Deployment-specific material (endpoints, branding) stays local; templates are tracked
+#   config/*.example.yaml      -> copy to config/config.yaml, config/config.prod.yaml
+#   frontend/brand.example/    -> copy to frontend/brand.local/ (name, logo, colours)
+config/config.yaml
+config/config.prod.yaml
+frontend/brand.local/
+/*.pdf

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sandtable — AI-assisted COA drafting and red-team wargaming</title>
+    <!--
+      No webfont <link> here on purpose. Fonts are bundled from the
+      @fontsource packages via src/styles/fonts.css, because this app deploys
+      to an air-gapped network where a request to fonts.googleapis.com hangs
+      and then silently falls back to system fonts. Do not "optimise" this
+      back to a CDN link.
+    -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

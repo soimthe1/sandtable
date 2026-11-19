@@ -1,0 +1,74 @@
+# sandtable - development
+#
+# Builds from source and bind-mounts it, so code changes are picked up without
+# a rebuild. Production uses docker-compose.prod.yaml (one image from a tar).
+# The usual local loop is .\scripts\dev.ps1 start (no Docker); this file is
+# the optional containerised alternative.
+#
+#   docker compose up -d              start (first run: npm install takes minutes)
+#   docker compose logs -f frontend   Vite prints "ready in ... ms" when the UI is up
+#   docker compose down               stop
+#
+# App: http://localhost:9010 (Vite proxies /api to the backend container).
+# API: http://localhost:8000/api/health
+
+name: sandtable
+
+services:
+  backend:
+    # Dev builds the API alone from backend/Dockerfile. Production is a
+    # different shape entirely - ONE image with the API and the built UI
+    # together behind nginx (docker/Dockerfile) - because dev wants --reload
+    # and HMR, and neither survives a static nginx bundle.
+    build:
+      context: ./backend
+    # Secrets only (LLM_API_KEY); every other setting comes from config/config.yaml.
+    env_file:
+      - ./.env
+    environment:
+      APP_ENV: dev
+    volumes:
+      # Live source, so --reload actually reloads.
+      - ./backend/app:/app/app:ro
+      - ./config:/app/config:ro
+    ports:
+      # Optional. The frontend reaches the API over the internal network by
+      # service name, not through this - it exists so you can curl
+      # http://localhost:8000/api/health directly. Renumber or delete freely.
+      - "8000:8000"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    # Plain node image running the Vite dev server. Production serves a
+    # static built bundle from nginx inside the single image
+    # (docker/Dockerfile), which is the wrong shape for development - no HMR,
+    # full rebuild per change.
+    image: node:20-slim
+    working_dir: /app
+    environment:
+      # Both of these configure the Vite DEV SERVER and are read by
+      # vite.config.ts. Deliberately NOT VITE_ prefixed - that prefix would
+      # inline them into the browser bundle, and these are server settings.
+      #
+      # Vite's default proxy target is localhost:8000, which is right when you
+      # run `npm run dev` on Windows and WRONG in here: inside this container
+      # `localhost` is this container, not the backend one. Hence the service
+      # name.
+      DEV_API_TARGET: http://backend:8000
+      # The browser loads the app from the published host port, but Vite's
+      # live-reload client connects back on server.port (5173) unless told
+      # otherwise - so with a remapped port, HMR silently stops working. Keep
+      # this in step with the LEFT number in ports below.
+      DEV_HMR_CLIENT_PORT: "9010"
+    volumes:
+      - ./frontend:/app
+      # Keep container node_modules out of the host bind mount. It starts
+      # EMPTY, so the first `up` runs a full npm install before Vite starts.
+      - /app/node_modules
+    ports:
+      # THE app port. Change the left number to move it; the only other thing
+      # to update is DEV_HMR_CLIENT_PORT above.
+      - "9010:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend

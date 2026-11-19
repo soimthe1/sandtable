@@ -1,0 +1,11 @@
+/* Overrides the --brand-* defaults in src/styles/tokens.css. Keep only the ones you change. */
+:root {
+  --brand-ground: #081220; /* page ground */
+  --brand-surface: #0b3d4a; /* panels, mixed into the ground */
+  --brand-accent: #00d0e1; /* primary accent, first COA colour */
+  --brand-interactive: #38b6ff; /* focus ring */
+  --brand-accent-2: #f5b842; /* second accent, second COA colour */
+  --brand-highlight: #b89f6b; /* highlights */
+  --brand-border: #64748b; /* borders, hairlines */
+  --brand-text: #e6eff5; /* primary text */
+}

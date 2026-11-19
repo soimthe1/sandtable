@@ -1,0 +1,30 @@
+# sandtable settings template. Copy to config.yaml (git-ignored) and edit.
+# Everything except secrets lives here; secrets (LLM_API_KEY) are in
+# .env (development) or .env.prod (production). In production, config.prod.yaml (every key
+# of this file, production values) is merged over this file.
+
+ai:
+  default:
+    provider: ollama                  # ollama | openai (OpenAI, vLLM) | comfyui
+    base_url: http://localhost:11434
+    model: qwen3:30b-a3b-instruct-2507-q8_0
+    suppress_thinking: true
+    timeout_seconds: 180
+    # For an endpoint that needs a key, add: api_key_env: LLM_API_KEY
+
+  media:                              # media layer (ComfyUI: image, audio, video); not used by Sandtable yet
+    provider: comfyui
+    enabled: false
+    base_url: http://localhost:8188
+
+app:
+  display_name: Sandtable                # product name in the API title; UI branding is frontend/brand.local/
+  default_ui_language: en             # en | ar
+  translation_mode: native            # native | translate
+  json_mode: true                     # guaranteed-JSON responses; false if the endpoint rejects it
+  risk_guardrail_max_retries: 1
+  cors_origins:
+    - http://localhost:5173
+    - http://127.0.0.1:5173
+  scenario_url_allowed_hosts: []      # empty = any host (development only)
+  scenario_url_fetch_timeout_seconds: 20

@@ -1,0 +1,1661 @@
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  /* The status bar is fixed to the bottom edge, so anything scrolled to
+     (nav rail jumps, focus, scrollIntoView) must stop short of it or it
+     lands underneath and can't be clicked. */
+  scroll-padding-block: 12px 46px;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  /* Grid + a faint topographic contour layer underneath it - "survey map
+     paper" texture, not a live map. Contour color is --texture-line's hex
+     hardcoded (data-URI SVGs can't see CSS custom properties) - keep the
+     two in sync if the token ever changes. */
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Cg fill='none' stroke='%23092533' stroke-width='1'%3E%3Cpath d='M-20,30 C40,0 80,60 140,30 C200,0 240,60 320,30'/%3E%3Cpath d='M-20,80 C40,55 90,105 150,80 C210,55 250,105 320,80'/%3E%3Cpath d='M-20,130 C50,105 85,155 145,130 C205,105 255,155 320,130'/%3E%3Cpath d='M-20,175 C35,155 95,195 155,175 C215,155 260,195 320,175'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:
+    28px 28px,
+    28px 28px,
+    300px 200px;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0;
+  margin: 0 0 var(--space-2) 0;
+}
+
+p {
+  margin: 0 0 var(--space-2) 0;
+}
+
+textarea,
+input[type="text"] {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--grid-line);
+  background: var(--paper-inset);
+  color: var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+textarea:focus,
+input[type="text"]:focus {
+  border-color: var(--acetate-1);
+  box-shadow: 0 0 0 3px var(--glow);
+  outline: none;
+}
+
+textarea::placeholder {
+  color: color-mix(in srgb, var(--ink-soft) 70%, transparent);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+/* Sentence case, as the peer apps' field labels. */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-block-end: var(--space-1);
+}
+
+.field {
+  margin-block-end: var(--space-4);
+}
+
+/* --- Two-column scenario field layout (ScenarioForm.tsx).
+   The grid flexes to fill its column so the textareas absorb whatever
+   height the taller sand-table column sets, instead of leaving a dead gap
+   between the last field and the generate button. --- */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 var(--space-4);
+  flex: 1;
+  grid-auto-rows: minmax(96px, 1fr);
+}
+
+.field-grid .field {
+  margin-block-end: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.field-grid .field textarea {
+  flex: 1;
+  min-height: 0;
+}
+
+.field-grid .field-span-2 {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 700px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mono {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  /* Coordinates/timestamps must not flip digit order under RTL. */
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.container {
+  /* Was 1180px - on any screen wider than that, the whole app sat in a
+     narrow center column with dead space on both sides while everything
+     inside it stacked top-to-bottom. Widened so the scenario form and OOB
+     roster can sit side by side and COA cards get a real 3-up grid instead
+     of wasting the sides. */
+  max-width: 1600px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+  padding-block: var(--space-5);
+}
+
+.btn {
+  border: 1px solid var(--ink);
+  background: var(--paper-raised);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--ink) 20%, transparent);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-primary {
+  background: var(--acetate-1);
+  border-color: var(--acetate-1);
+  color: var(--paper);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--acetate-1) 40%, transparent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--acetate-1) 85%, #ffffff);
+  border-color: var(--acetate-1);
+  color: var(--paper);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--acetate-1) 65%, transparent);
+}
+
+.btn-danger-outline {
+  border-color: var(--redteam);
+  color: var(--redteam);
+}
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: 0 1px 0 color-mix(in srgb, #ffffff 5%, transparent) inset;
+}
+
+/* Section caption - the one place small uppercase stays, as in the peer
+   apps' section captions (11px / 600 / .06em). */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.stamp {
+  display: inline-block;
+  /* Pre-existing bug this revamp surfaced: as a direct child of a column
+     .stack (align-items defaults to stretch), an inline-block with no
+     intrinsic width constraint was stretching to the full container width,
+     turning a small rotated badge into a diagonal bar across the form.
+     width: fit-content + align-self keep it sized to its own text in
+     every flex-parent context (row or column). */
+  width: fit-content;
+  align-self: flex-start;
+  border: 2px solid var(--stamp);
+  color: var(--stamp);
+  font-family: var(--font-display);
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: var(--radius);
+  transform: rotate(-3deg);
+  letter-spacing: 0.08em;
+}
+
+[dir="rtl"] .stamp {
+  transform: rotate(3deg);
+}
+
+.warning-banner {
+  border: 1px dashed var(--stamp);
+  background: color-mix(in srgb, var(--stamp) 10%, var(--paper-raised));
+  color: var(--ink);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.warning-banner svg {
+  flex: none;
+  color: var(--stamp);
+  margin-block-start: 1px;
+}
+
+/* --- "HUD frame": four corner brackets, pure background-image layers so it
+   composes with any element's own `background` without extra markup or
+   burning both pseudo-elements. Put AFTER .card in the cascade so its
+   background-image layers survive .card's `background:` shorthand reset.
+   The tactical-but-still-paper identity comes from using --ink at low
+   weight, not a glow/neon treatment. --- */
+.tac-frame {
+  position: relative;
+  background-image:
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1)),
+    linear-gradient(var(--acetate-1), var(--acetate-1));
+  background-repeat: no-repeat;
+  background-size:
+    2px 13px, 13px 2px,
+    2px 13px, 13px 2px,
+    2px 13px, 13px 2px,
+    2px 13px, 13px 2px;
+  background-position:
+    top -1px left -1px, top -1px left -1px,
+    top -1px right -1px, top -1px right -1px,
+    bottom -1px left -1px, bottom -1px left -1px,
+    bottom -1px right -1px, bottom -1px right -1px;
+}
+
+/* --- Brand: header lockup + symbol. Symbol, optional Arabic wordmark over
+   the English one, tagline beside. Name, symbol and colours come from
+   src/brand/index.ts (overridable per organisation in brand.local/). --- */
+.app-header {
+  border-color: color-mix(in srgb, var(--brand-accent) 45%, transparent);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--brand-accent) 18%, transparent),
+    0 1px 0 color-mix(in srgb, #ffffff 5%, transparent) inset;
+}
+
+/* Second-accent highlight along the top edge. A pseudo-element, not
+   another background layer, so .tac-frame's corner brackets stay intact. */
+.app-header::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline: 30%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brand-accent-2), transparent);
+  pointer-events: none;
+}
+
+.brand-symbol {
+  display: block;
+  flex: none;
+  filter: drop-shadow(0 0 6px var(--glow));
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  line-height: 1;
+}
+
+.brand-name-ar {
+  font-family: "IBM Plex Sans Arabic", var(--font-body);
+  font-weight: 600;
+  font-size: 26px;
+  color: var(--brand-text);
+}
+
+.brand-name-en {
+  font-family: "IBM Plex Sans", var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.32em;
+  color: var(--brand-text);
+}
+
+/* Single-line wordmark (no Arabic name above it): set it as the title. */
+.brand-name-en:only-child {
+  font-size: 24px;
+  letter-spacing: 0.04em;
+}
+
+/* --- COA acetate sheet: a folded-corner marker in the card's own accent
+   color (set inline per-card as --coa-accent), on top of the .tac-frame
+   corner brackets - reads as "a sheet laid on the table", not a plain box. --- */
+.acetate-sheet {
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.acetate-sheet:hover {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+/* --- COA card entrance: staggered per-card delay set inline via
+   animationDelay in CoaCard.tsx (index * 90ms) so a multi-COA result
+   cascades in left-to-right instead of popping in all at once. --- */
+.coa-card-enter {
+  animation: card-enter 0.4s ease both;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Always-visible motion, independent of any user action - a slowly
+   rotating compass needle (header icon + ScenarioSandTable's compass marks)
+   and a pulsing "session live" dot next to the Zulu clock. These render on
+   first paint, before any scenario is imported or COA generated, so
+   "is animation working at all" is answerable at a glance. Respects the
+   global prefers-reduced-motion rule above like everything else. --- */
+/* Speeds here are deliberate: earlier versions used 22-26s rotations and a
+   7px dot, which are technically animating but perceptually static - users
+   reported the app as "no animation at all" and they were right. Anything
+   meant to read as alive runs on a 2-8s cycle and carries a glow. */
+.icon-drift {
+  animation: spin-slow 8s linear infinite;
+  transform-origin: 50% 50%;
+  color: var(--acetate-1);
+  filter: drop-shadow(0 0 5px var(--glow));
+}
+
+.compass-spin {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: spin-slow 10s linear infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.live-dot {
+  position: relative;
+  top: 1px;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--acetate-3);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--acetate-3) 70%, transparent),
+      0 0 8px color-mix(in srgb, var(--acetate-3) 80%, transparent);
+  }
+  50% {
+    opacity: 0.45;
+    box-shadow:
+      0 0 0 6px color-mix(in srgb, var(--acetate-3) 0%, transparent),
+      0 0 3px color-mix(in srgb, var(--acetate-3) 30%, transparent);
+  }
+}
+
+.acetate-sheet::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  border-style: solid;
+  border-width: 0 22px 22px 0;
+  border-color: transparent var(--coa-accent, var(--acetate-1)) transparent transparent;
+  opacity: 0.85;
+}
+
+[dir="rtl"] .acetate-sheet::after {
+  border-width: 0 0 22px 22px;
+  border-color: transparent transparent transparent var(--coa-accent, var(--acetate-1));
+}
+
+/* The COA id is a fixed-width tail on the header row; the name gets the
+   remaining space and wraps within it rather than pushing the id onto a
+   second line (which knocked card C's title below its badge). */
+.coa-header .coa-id {
+  flex: none;
+  font-size: 10px;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-block-start: 4px;
+}
+
+.coa-header h3 {
+  font-size: 16px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.coa-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--coa-accent, var(--acetate-1));
+  color: var(--coa-accent, var(--acetate-1));
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.phase-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.phase-row .icon-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-block-start: 1px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1px solid var(--grid-line);
+  color: var(--ink-soft);
+}
+
+.risk-row .icon-chip {
+  color: var(--redteam);
+}
+
+/* --- Schematic sand-table panel (ScenarioSandTable.tsx) --- */
+.sandtable {
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  padding: var(--space-3);
+  animation: fade-in 0.35s ease;
+}
+
+/* The plot <svg> lives inside .sandtable-plot (which also hosts the radar
+   layer behind it). Scoped to the direct child so it does NOT also catch the
+   small MapPinIcon nested in .sandtable-caption below - that bug blew a 12px
+   icon up to ~130px tall, caught only by looking at a screenshot. */
+.sandtable-plot {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--paper-inset);
+}
+
+.sandtable-plot > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Radar sits behind the plot; the svg ground is transparent so it shows
+   through without washing out the markers. */
+.radar-layer {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 50%;
+  width: 128%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+[dir="rtl"] .radar-layer {
+  transform: translate(50%, -50%);
+}
+
+/* Movement/route terrain lines flow along their own path. */
+.terrain-flow {
+  animation: terrain-dash 2.5s linear infinite;
+}
+
+@keyframes terrain-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+/* Unit markers: lit frames, with a hover/roster-driven highlight. */
+.oob-marker {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--marker-color, var(--acetate-1)) 55%, transparent));
+  transition: filter 0.18s ease;
+}
+
+.oob-marker.is-active {
+  filter: drop-shadow(0 0 9px var(--marker-color, var(--acetate-1)));
+}
+
+.marker-halo {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+
+.sandtable-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-block-start: var(--space-2);
+  font-size: 11px;
+}
+
+/* --- Verbose generation status feed (GeneratingStatus.tsx) --- */
+.generating-panel {
+  border: 1px dashed var(--ink-soft);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--acetate-1) 6%, var(--paper-raised));
+}
+
+.generating-stage {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  padding-block: 3px;
+  color: var(--ink-soft);
+  transition: color 0.2s ease;
+}
+
+.generating-stage .icon-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.generating-stage.is-done {
+  color: var(--ink-soft);
+}
+
+.generating-stage.is-done .icon-chip {
+  color: var(--acetate-3);
+}
+
+.generating-stage.is-active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.generating-stage.is-active .icon-chip {
+  color: var(--acetate-1);
+}
+
+/* Stepped-reveal ellipsis: animates `width` (broadly supported) rather than
+   `content` (not reliably animatable across browsers) to step through
+   "", ".", "..", "...". */
+.generating-stage.is-active .generating-label::after {
+  content: "...";
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  vertical-align: bottom;
+  animation: ellipsis-reveal 1.2s steps(4, end) infinite;
+}
+
+.generating-elapsed {
+  margin-inline-start: auto;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.spin {
+  animation: spin 1.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ellipsis-reveal {
+  from {
+    width: 0;
+  }
+  to {
+    width: 1.1em;
+  }
+}
+
+/* --- Live Zulu clock in the header --- */
+.zulu-clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+/* Left column: fields, with the generate block pinned to its bottom so the
+   column fills the height the taller sand-table column sets. */
+.scenario-fields {
+  display: flex;
+  flex-direction: column;
+}
+
+.scenario-generate {
+  margin-block-start: auto;
+  padding-block-start: var(--space-4);
+}
+
+@media (max-width: 900px) {
+  .scenario-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Hostile "radar ping" on sand-table markers (ScenarioSandTable.tsx) ---
+   SVG elements support CSS animation same as HTML; transform-box:fill-box
+   makes `scale()` originate from the shape's own center instead of the
+   SVG viewport's 0,0. */
+.hostile-pulse-ring {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+/* --- Radar sweep over the schematic plot. A rotating conic gradient
+   clipped to a circle - the single most "this thing is live" element on
+   screen, and it costs one element and one keyframe. Decorative only: it
+   sweeps at a fixed rate and represents no sensor, no coverage, and no
+   detection state. --- */
+.radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--acetate-1) 34%, transparent) 0deg,
+    color-mix(in srgb, var(--acetate-1) 10%, transparent) 26deg,
+    transparent 60deg,
+    transparent 360deg
+  );
+  animation: radar-rotate 4s linear infinite;
+}
+
+@keyframes radar-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Expanding range rings under the sweep - three staggered pings. */
+.radar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--acetate-1) 45%, transparent);
+  pointer-events: none;
+  animation: radar-ping 4s ease-out infinite;
+}
+
+.radar-ring:nth-child(2) {
+  animation-delay: 1.33s;
+}
+
+.radar-ring:nth-child(3) {
+  animation-delay: 2.66s;
+}
+
+@keyframes radar-ping {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* --- Order-of-battle roster (OrderOfBattleRoster.tsx) --- */
+.oob-roster {
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  padding: var(--space-3);
+  animation: fade-in 0.25s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.oob-group + .oob-group {
+  margin-block-start: var(--space-2);
+}
+
+.oob-dot {
+  position: relative;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-block-start: 3px;
+}
+
+.oob-dot-hostile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+.oob-group-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.oob-unit-list {
+  margin: 4px 0 0 0;
+  padding-inline-start: 15px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.oob-unit-list li {
+  padding-block: 1px;
+}
+
+.oob-unit {
+  cursor: default;
+  border-radius: var(--radius);
+  padding-inline: 4px;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.oob-unit:hover,
+.oob-unit.is-active {
+  color: var(--unit-color, var(--acetate-1));
+  background: color-mix(in srgb, var(--unit-color, var(--acetate-1)) 14%, transparent);
+}
+
+/* --- Swimlane phase timeline + playback (PhaseTimeline.tsx) --- */
+.swimlane {
+  margin-block: var(--space-2) var(--space-3);
+}
+
+/* Two columns: a fixed lane-label gutter and the time track. Phase names
+   live in the gutter at full length rather than being truncated to fit
+   inside a narrow bar. */
+.swimlane-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--lane-label) 1fr;
+  align-items: center;
+  gap: 4px var(--space-2);
+  --lane-label: 104px;
+}
+
+.swimlane-play-cell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.swimlane-axis {
+  position: relative;
+  height: 14px;
+  border-block-end: 1px solid var(--grid-line);
+  /* Decorative and aria-hidden - without this the absolutely positioned
+     tick labels sit on top of the play button and the bars and swallow
+     their clicks. */
+  pointer-events: none;
+}
+
+.swimlane-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--ink-soft);
+  transition: color 0.18s ease;
+}
+
+.swimlane-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swimlane-label.is-active {
+  color: var(--coa-accent, var(--acetate-1));
+  font-weight: 600;
+}
+
+.swimlane-track {
+  position: relative;
+  height: 20px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  border-radius: var(--radius);
+}
+
+.swimlane-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 9.5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+[dir="rtl"] .swimlane-tick {
+  transform: translateX(50%);
+}
+
+/* End ticks anchor inward: the first one centred on 0% spills back into the
+   lane-label gutter and lands under the play button; the last spills past
+   the card edge. */
+.swimlane-tick:first-child {
+  transform: translateX(3px);
+}
+
+[dir="rtl"] .swimlane-tick:first-child {
+  transform: translateX(-3px);
+}
+
+.swimlane-tick:last-child {
+  transform: translateX(-100%);
+}
+
+[dir="rtl"] .swimlane-tick:last-child {
+  transform: translateX(100%);
+}
+
+.swimlane-bar {
+  position: absolute;
+  top: 0;
+  height: 20px;
+  min-width: 6px;
+  border: 1px solid color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 55%, transparent);
+  background: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 16%, transparent);
+  color: var(--ink-soft);
+  border-radius: var(--radius);
+  font-size: 11px;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease;
+}
+
+.swimlane-bar.is-past {
+  opacity: 0.72;
+}
+
+.swimlane-bar.is-active,
+.swimlane-bar:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 34%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 55%, transparent);
+}
+
+/* Playhead: one vertical line spanning every lane. --playhead is a 0-1
+   fraction set inline; the calc offsets it past the lane-label gutter so
+   it lines up with the bars rather than the grid edge. */
+.swimlane-playhead {
+  position: absolute;
+  inset-block: 20px 0;
+  width: 2px;
+  margin-inline-start: -1px;
+  inset-inline-start: calc(var(--lane-label) + (100% - var(--lane-label)) * var(--playhead, 0));
+  background: var(--coa-accent, var(--acetate-1));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 80%, transparent);
+  transition: inset-inline-start 0.4s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* --- Legacy dotted-strip styles, still used for node sizing tokens --- */
+.phase-timeline-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block: var(--space-2);
+}
+
+.phase-play {
+  flex: none;
+  margin-block-start: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--coa-accent, var(--acetate-1));
+  background: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 14%, transparent);
+  color: var(--coa-accent, var(--acetate-1));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.phase-play:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 55%, transparent);
+}
+
+.phase-play.is-playing {
+  animation: play-throb 1.6s ease-in-out infinite;
+}
+
+@keyframes play-throb {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 60%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 0%, transparent);
+  }
+}
+
+.phase-timeline {
+  position: relative;
+  flex: 1;
+  height: 52px;
+}
+
+/* Fill showing how far playback has walked, in the COA's own accent. */
+.phase-timeline-progress {
+  position: absolute;
+  inset-inline-start: 11px;
+  top: 21px;
+  height: 2px;
+  background: var(--coa-accent, var(--acetate-1));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 70%, transparent);
+  transition: width 0.4s ease;
+  max-width: calc(100% - 22px);
+}
+
+.phase-timeline-track {
+  position: absolute;
+  inset-inline: 11px;
+  top: 21px;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--ink-soft) 0,
+    var(--ink-soft) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  background-size: 24px 2px;
+  opacity: 0.6;
+  animation: march 1.4s linear infinite;
+}
+
+@keyframes march {
+  to {
+    background-position: 24px 0;
+  }
+}
+
+.phase-node {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+[dir="rtl"] .phase-node {
+  transform: translateX(50%);
+}
+
+.phase-node-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--paper-raised);
+  border: 1.5px solid var(--grid-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.phase-node-time {
+  font-size: 9.5px;
+  white-space: nowrap;
+}
+
+/* Nudge the end labels inward so they stay inside the strip. */
+.phase-node:first-of-type .phase-node-time {
+  transform: translateX(22%);
+}
+
+.phase-node:last-of-type .phase-node-time {
+  transform: translateX(-22%);
+}
+
+[dir="rtl"] .phase-node:first-of-type .phase-node-time {
+  transform: translateX(-22%);
+}
+
+[dir="rtl"] .phase-node:last-of-type .phase-node-time {
+  transform: translateX(22%);
+}
+
+.phase-node.is-past .phase-node-dot {
+  border-color: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 60%, transparent);
+  color: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 75%, transparent);
+}
+
+.phase-node.is-active {
+  color: var(--ink);
+  font-weight: 600;
+  z-index: 2;
+}
+
+.phase-node.is-active .phase-node-dot {
+  border-color: var(--coa-accent, var(--acetate-1));
+  color: var(--coa-accent, var(--acetate-1));
+  background: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 18%, var(--paper-raised));
+  transform: scale(1.25);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 16%, transparent),
+    0 0 12px color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 70%, transparent);
+}
+
+.phase-row {
+  padding-inline: var(--space-2);
+  border-inline-start: 2px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.phase-row.is-active {
+  background: color-mix(in srgb, var(--coa-accent, var(--acetate-1)) 12%, transparent);
+  border-inline-start-color: var(--coa-accent, var(--acetate-1));
+  border-radius: var(--radius);
+}
+
+/* --- COA comparison table (CoaCompareView.tsx) --- */
+.compare-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+}
+
+.compare-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 680px;
+  background: var(--paper-raised);
+}
+
+.compare-table th,
+.compare-table td {
+  border: 1px solid var(--grid-line);
+  padding: var(--space-3);
+  text-align: start;
+  vertical-align: top;
+  font-size: 13px;
+}
+
+.compare-table thead th {
+  background: color-mix(in srgb, var(--ink) 4%, var(--paper-raised));
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.compare-row-label {
+  background: color-mix(in srgb, var(--ink) 4%, var(--paper-raised));
+  font-family: var(--font-body);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.compare-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* =====================================================================
+   Ops-console chrome: nav rail, status bar, plot thumbnails, legend,
+   stat chips. All added Sep 2026 alongside the dark theme.
+   ===================================================================== */
+
+/* --- Left icon rail (NavRail.tsx). Fixed to the viewport edge; the page
+   gets a matching inline padding so nothing sits underneath it. Hidden
+   below 1000px, where the layout is single-column anyway. --- */
+.nav-rail {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 60px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  background: var(--paper-raised);
+  border-inline-end: 1px solid var(--grid-line);
+}
+
+.nav-rail-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-block-end: var(--space-2);
+  border-block-end: 1px solid var(--grid-line);
+  padding-block-end: var(--space-4);
+}
+
+.nav-rail-btn {
+  width: 46px;
+  padding-block: 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.nav-rail-btn:hover {
+  color: var(--acetate-1);
+  background: color-mix(in srgb, var(--acetate-1) 12%, transparent);
+  border-color: color-mix(in srgb, var(--acetate-1) 40%, transparent);
+}
+
+/* Sentence case, the word under the icon, as the peer apps' rails. Long
+   Arabic labels wrap to two lines inside the 46px button. */
+.nav-rail-label {
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+}
+
+/* --- Bottom status strip (StatusBar.tsx) --- */
+.status-bar {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  height: 30px;
+  padding-inline: var(--space-4);
+  background: var(--paper-raised);
+  border-block-start: 1px solid var(--grid-line);
+  font-size: 11px;
+}
+
+.status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.status-cell-end {
+  margin-inline-start: auto;
+}
+
+.status-value {
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.status-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--acetate-3);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--acetate-3) 80%, transparent);
+}
+
+.status-led.is-busy {
+  background: var(--stamp);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--stamp) 80%, transparent);
+  animation: live-pulse 1.2s ease-in-out infinite;
+}
+
+/* Rail and status bar are chrome around the page, so the page reserves
+   room for both rather than sliding underneath them. */
+body {
+  padding-inline-start: 60px;
+  padding-block-end: 30px;
+}
+
+@media (max-width: 1000px) {
+  .nav-rail {
+    display: none;
+  }
+
+  body {
+    padding-inline-start: 0;
+  }
+}
+
+/* --- Schematic thumbnail inside a COA card (ScenarioSandTable compact) --- */
+.sandtable.is-compact {
+  padding: 0;
+  border-color: color-mix(in srgb, var(--plot-accent, var(--acetate-1)) 45%, transparent);
+  background: var(--paper-inset);
+  overflow: hidden;
+}
+
+.sandtable.is-compact .sandtable-plot {
+  border-radius: 0;
+}
+
+/* Cap the thumbnail's height - at full card width the 320x190 viewBox
+   scales to ~270px tall and dominates the card. preserveAspectRatio on the
+   svg letterboxes it neatly inside this height. */
+.sandtable.is-compact .sandtable-plot > svg {
+  height: 128px;
+}
+
+.sandtable-thumb-tag {
+  padding: 4px 8px;
+  font-size: 9px;
+  opacity: 0.75;
+  border-block-start: 1px solid var(--grid-line);
+}
+
+/* --- Affiliation legend under the full plot --- */
+.sandtable-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-block-start: var(--space-2);
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--grid-line);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* --- Counted stat chips (real counts off the imported scenario) --- */
+.stat-chips {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.stat-chip {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  background: var(--paper-inset);
+}
+
+.stat-chip-value {
+  font-size: 15px;
+  color: var(--acetate-1);
+}
+
+/* =====================================================================
+   Text-derived laydown sketch + click-to-expand plots.
+   ===================================================================== */
+
+/* The sketch panel is deliberately styled apart from .sandtable: a dashed
+   frame and a "from text" caption, so a relative arrangement read out of
+   prose never borrows the visual authority of a surveyed plot. */
+.sketch-panel {
+  border: 1px dashed var(--grid-line);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  padding: var(--space-3);
+  animation: fade-in 0.3s ease;
+}
+
+.sketch-panel .sandtable-plot {
+  background: var(--paper-inset);
+}
+
+.sketch-panel .sandtable-plot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sketch-panel.is-compact {
+  padding: 0;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--plot-accent, var(--acetate-1)) 45%, transparent);
+  overflow: hidden;
+}
+
+.sketch-panel.is-compact .sandtable-plot svg {
+  height: 128px;
+}
+
+.sketch-caption {
+  margin-block-start: var(--space-2);
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--grid-line);
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.sketch-note {
+  margin-block-start: var(--space-1);
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.sketch-pending {
+  border: 1px dashed var(--grid-line);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--ink-soft);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+.sketch-unit-list {
+  list-style: none;
+  margin: var(--space-2) 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sketch-unit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.sketch-unit-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sketch-remove {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.sketch-remove:hover {
+  color: var(--redteam);
+  border-color: color-mix(in srgb, var(--redteam) 50%, transparent);
+}
+
+.oob-marker.is-draggable {
+  cursor: grab;
+}
+
+.oob-marker.is-draggable:active {
+  cursor: grabbing;
+}
+
+/* --- Click-to-expand (PlotZoom.tsx) --- */
+.plot-zoom {
+  position: relative;
+}
+
+.plot-zoom.is-clickable {
+  cursor: zoom-in;
+}
+
+.plot-zoom-btn {
+  position: absolute;
+  top: 4px;
+  inset-inline-start: 4px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--paper) 75%, transparent);
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.plot-zoom:hover .plot-zoom-btn,
+.plot-zoom-btn:focus-visible {
+  opacity: 1;
+}
+
+.plot-zoom-btn:hover {
+  color: var(--acetate-1);
+  border-color: var(--acetate-1);
+}
+
+.plot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  background: color-mix(in srgb, #000000 78%, transparent);
+  animation: fade-in 0.15s ease;
+}
+
+.plot-overlay-inner {
+  position: relative;
+  width: min(1100px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--acetate-1);
+  border-radius: var(--radius);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--acetate-1) 22%, transparent);
+}
+
+.plot-overlay-close {
+  position: absolute;
+  top: var(--space-2);
+  inset-inline-end: var(--space-2);
+  padding: 4px var(--space-3);
+  font-size: 11px;
+}
+
+.plot-overlay-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 74vh;
+  background: var(--paper-inset);
+  border-radius: var(--radius);
+}
+
+.plot-overlay-caption {
+  margin-block-start: var(--space-3);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  line-height: 1.5;
+}

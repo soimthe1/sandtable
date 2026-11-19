@@ -1,0 +1,117 @@
+{
+  "app": {
+    "title": "Sandtable",
+    "name_ar": "",
+    "name_en": "Sandtable",
+    "subtitle": "AI-assisted COA drafting and red-team wargaming",
+    "stamp": "Draft — for review",
+    "disclaimer": "Every course of action below is a draft for review. Nothing in this app executes, approves, or selects a course of action."
+  },
+  "scenario": {
+    "heading": "Scenario",
+    "mission_statement": "Mission statement",
+    "mission_statement_placeholder": "What is the unit tasked to do, and why?",
+    "terrain_description": "Terrain / area of interest",
+    "terrain_description_placeholder": "Key terrain, obstacles, avenues of approach…",
+    "force_composition_notes": "Force composition",
+    "force_composition_notes_placeholder": "Friendly and enemy forces, strength, disposition…",
+    "constraints_roe": "Constraints / rules of engagement",
+    "constraints_roe_placeholder": "Time windows, asset limits, ROE…",
+    "additional_notes": "Additional notes",
+    "additional_notes_placeholder": "Anything else worth including",
+    "samples_heading": "New here? Try a sample scenario:",
+    "samples_confirm_replace": "Replace the current form with this sample scenario? Your typed entries will be lost.",
+    "import_button": "Import scenario.json",
+    "imported_badge": "Imported: {{name}}",
+    "importing_from_url": "Loading scenario handed off by the workstation…",
+    "generate_button": "Generate COAs",
+    "generating": "Drafting courses of action…",
+    "generating_stages": [
+      "Reading scenario and constraints…",
+      "Drafting candidate courses of action…",
+      "Running red-team critique on each COA…",
+      "Checking risk assessments for fabricated confidence figures…",
+      "Finalizing and formatting…"
+    ],
+    "sandtable_placeholder": "Import a scenario.json to plot the order of battle here",
+    "sandtable_disclaimer": "Schematic — not to scale. Positions are plotted directly from the imported scenario file.",
+    "sandtable_aria": "Schematic plot of {{name}}",
+    "oob_heading": "Order of battle",
+    "terrain_heading": "Terrain features",
+    "affiliation": {
+      "friend": "Friendly",
+      "hostile": "Hostile (est.)",
+      "neutral": "Neutral",
+      "unknown": "Unknown"
+    },
+    "stat_units": "Units",
+    "stat_terrain": "Terrain",
+    "sandtable_schematic_tag": "Schematic — not to scale",
+    "sample_badge": "Sample loaded: {{name}}"
+  },
+  "coa": {
+    "heading": "Courses of action",
+    "narrative": "Narrative",
+    "phases": "Phased timeline",
+    "red_team": "Red-team critique",
+    "risk": "Risk comparison",
+    "revise_placeholder": "e.g. keep this COA but avoid the ridge route",
+    "revise_button": "Request revision",
+    "revising": "Revising…",
+    "revising_stages": [
+      "Reviewing requested change…",
+      "Revising narrative and phased timeline…",
+      "Re-checking the risk assessment…",
+      "Finalizing revision…"
+    ],
+    "export_button": "Accept & export mission bundle",
+    "exporting": "Exporting…",
+    "return_to_workstation": "Return to workstation",
+    "offset": "T+{{min}} min",
+    "view_toggle_label": "COA view",
+    "view_cards": "Cards",
+    "view_compare": "Compare",
+    "play_phases": "Play through phases",
+    "pause_phases": "Pause playback"
+  },
+  "warnings": {
+    "quantitative_leak": "A fabricated confidence figure was removed from this COA's risk assessment. Consider regenerating it."
+  },
+  "errors": {
+    "generic": "Something went wrong: {{message}}",
+    "empty_scenario": "Add at least a mission statement, or import a scenario.json, before generating."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ar": "Arabic"
+  },
+  "nav": {
+    "label": "Sections",
+    "mission": "Mission",
+    "forces": "Forces",
+    "coas": "COAs"
+  },
+  "status": {
+    "ready": "Ready",
+    "generating": "Drafting COAs",
+    "revising": "Revising",
+    "session": "Session",
+    "units": "Units",
+    "coas": "COAs"
+  },
+  "sketch": {
+    "aria": "Relative disposition sketch read from your scenario text",
+    "derived_note": "Sketch read from your text — relative arrangement only, no coordinates or scale. Drag a unit to correct it.",
+    "tag": "Sketch — from text, not to scale",
+    "building": "Reading a disposition sketch from your text…",
+    "remove": "Remove {{name}} from the sketch",
+    "build_button": "Build sketch from text",
+    "building_short": "Reading…",
+    "build_hint": "Read the laydown from your text now, so you can correct it before generating COAs"
+  },
+  "plot": {
+    "expand": "Expand plot",
+    "close": "Close"
+  }
+}

@@ -1,0 +1,55 @@
+# Build context for docker/Dockerfile is the REPO ROOT, because the single
+# image needs both the backend and frontend trees. That makes this file the
+# one that matters - backend/.dockerignore and frontend/.dockerignore are only
+# consulted when their own folder is the context, which is no longer the case.
+#
+# Two things this has to get right:
+#
+#   1. node_modules. The ui stage does `npm install` and then `COPY frontend/ .`,
+#      so without the line below a Windows host's node_modules would be copied
+#      over the container's freshly installed Linux one - native binaries and
+#      all - and the build would use the wrong platform's packages.
+#
+#   2. env files. A real .env.prod on the build machine must never end
+#      up in an image layer. Production config reaches the container at RUN
+#      time through the .env.prod volume mount (see docker-compose.prod.yaml),
+#      never at build time. VITE_* values are passed with --build-arg instead;
+#      a stray .env in the context could otherwise be picked up by Vite and
+#      silently override them.
+
+# --- frontend ---
+frontend/node_modules
+frontend/dist
+frontend/tsconfig.tsbuildinfo
+
+# --- backend ---
+backend/__pycache__
+backend/**/__pycache__
+**/*.py[cod]
+backend/.venv
+backend/venv
+.venv
+venv
+.pytest_cache
+
+# --- config: nothing from here is ever baked in ---
+config/
+
+# Belt and braces, in case an env file is left somewhere else.
+.env
+.env.*
+**/.env
+**/.env.*
+
+# --- not needed by the build ---
+.git
+.gitignore
+.dockerignore
+release/
+images/
+docs/
+deploy/
+scripts/
+README.md
+docker-compose*.yaml
+docker-compose*.yml
